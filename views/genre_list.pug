@@ -6,6 +6,8 @@ block content
   ul
     each val in genre_list
       li
-        a(href=val.url) #{val.name}
+        a(href=val.url) #{val.name} - 
+        a(href=val.url+'/delete') delete 
+        a(href=val.url+'/update') Edit
     else
       li There are no book copies in this library.

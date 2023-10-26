@@ -124,14 +124,33 @@ exports.book_create_post = [
   }),
 ];
 
-// Display book delete form on GET.
+// Handle book delete on GET.
 exports.book_delete_get = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Book delete GET");
+  // Get details of book and their author and genre (in parallel)
+  const book = await Book.findById(req.params.id).populate("author").populate("genre").exec();
+
+  if (book === null) {
+    // No results.
+    res.redirect("/catalog/book_list");
+  }
+
+  res.render("book_delete", {
+    title: "Delete Book",
+    book: book,
+  });
 });
 
 // Handle book delete on POST.
 exports.book_delete_post = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Book delete POST");
+  // Get details of author and all their books (in parallel)
+  const book = await Book.findById(req.params.id).exec();
+
+  // Redirect to Book List if there is no book to delete
+  if (book === null) res.redirect("/catalog/book_list");
+
+  // Delete object and redirect to the list of books.
+  await Book.findByIdAndRemove(req.body.bookid);
+  res.redirect("/catalog/book_list");
 });
 
 // Display book update form on GET.

@@ -77,20 +77,73 @@ exports.genre_create_post = [
 
 // Display Genre delete form on GET.
 exports.genre_delete_get = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Genre delete GET");
+  // Get details of book and their author and genre (in parallel)
+  const genre = await Genre.findById(req.params.id).exec();
+
+  if (genre === null) {
+    // No results.
+    res.redirect("/catalog/genre_list");
+  }
+
+  res.render("genre_delete", {
+    title: "Delete Genre",
+    genre: genre,
+  });
 });
 
 // Handle Genre delete on POST.
 exports.genre_delete_post = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Genre delete POST");
+  // Get details of genre
+  const genre = await Genre.findById(req.params.id).exec();
+
+  if (genre === null) {
+    // Author has books. Render in same way as for GET route.
+    res.redirect("/catalog/genre_list");
+  } else {
+    // Author has no books. Delete object and redirect to the list of authors.
+    await Genre.findByIdAndRemove(req.body.genreid);
+    res.redirect("/catalog/genre_list");
+  }
 });
 
 // Display Genre update form on GET.
 exports.genre_update_get = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Genre update GET");
+  const genre = await Genre.findById(req.params.id).exec();
+
+  res.render("genre_form", {
+    title: "Edit Genre",
+    genre: genre,
+  });
 });
 
-// Handle Genre update on POST.
+//! Handle Genre update on POST.
 exports.genre_update_post = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Genre update POST");
+  // Convert the genre to an array.
+  (req, res, next) => {
+    if (!(req.body.genre instanceof Array)) {
+      if (typeof req.body.genre === "undefined") {
+        req.body.genre = [];
+      } else {
+        req.body.genre = new Array(req.body.genre);
+      }
+    }
+    next();
+  },
+    // Validate and sanitize fields.
+    body("Genre")
+      .trim()
+      .isLength({ min: 1 })
+      .escape()
+      .withMessage("Genre name must be specified.")
+      .isAlphanumeric()
+      .withMessage("Genre name has non-alphanumeric characters.");
+
+  const errors = validationResult(req);
+
+  const genre = await Genre.findById(req.params.id).exec();
+
+  // Data from form is valid. Update the record.
+  const updatedGenre = await Genre.findByIdAndUpdate(req.params.id, genre, {});
+  // Redirect to book detail page.
+  res.redirect(updatedGenre.url);
 });
