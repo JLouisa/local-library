@@ -115,6 +115,7 @@ exports.bookinstance_delete_post = asyncHandler(async (req, res, next) => {
 
 //! Display BookInstance update form on GET.
 exports.bookinstance_update_get = asyncHandler(async (req, res, next) => {
+  //Get request for updating the form
   const [bookinstance, allBooks] = await Promise.all([
     BookInstance.findById(req.params.id).populate("book").exec(),
     Book.find({}, "title").exec(),
