@@ -94,6 +94,7 @@ exports.bookinstance_delete_get = asyncHandler(async (req, res, next) => {
   res.render("bookinstance_delete", {
     title: "Delete bookinstance",
     bookinstance: bookinstance,
+    book: bookinstance.book,
   });
 });
 
@@ -114,11 +115,15 @@ exports.bookinstance_delete_post = asyncHandler(async (req, res, next) => {
 
 //! Display BookInstance update form on GET.
 exports.bookinstance_update_get = asyncHandler(async (req, res, next) => {
-  const bookinstance = await BookInstance.find(req.params.id).exec();
+  const [bookinstance, allBooks] = await Promise.all([
+    BookInstance.findById(req.params.id).populate("book").exec(),
+    Book.find({}, "title").exec(),
+  ]);
 
   res.render("bookinstance_form", {
     title: "Update BookInstance",
     bookinstance: bookinstance,
+    book_list: allBooks,
   });
 });
 

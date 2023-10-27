@@ -10,8 +10,31 @@ const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const catalogRouter = require("./routes/catalog"); //Import routes for "catalog" area of site
 
+const compression = require("compression");
+const helmet = require("helmet");
+
 const app = express();
 
+// Set up rate limiter: maximum of twenty requests per minute
+const RateLimit = require("express-rate-limit");
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 20,
+});
+// Apply rate limiter to all requests
+app.use(limiter);
+
+// Add helmet to the middleware chain.
+// Set CSP headers to allow Bootstrap and Jquery to be served
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
+    },
+  })
+);
+
+app.use(compression()); // Compress all routes
 //Setup MongoDB Connection
 mongoose.set("strictQuery", false);
 
@@ -21,12 +44,15 @@ const cluster = process.env.MONGODBCLUSTER;
 const host = process.env.MONGODBHOST;
 const uri = `mongodb+srv://${username}:${password}@${cluster}${host}`;
 
+const dev_db_url = uri;
+const mongoDB = process.env.MONGODB_URI || dev_db_url;
+
 async function main(link) {
   // console.log(link);
   await mongoose.connect(link);
 }
 
-main(uri).catch((err) => console.log(err));
+main(mongoDB).catch((err) => console.log(err));
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
